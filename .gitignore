@@ -1,3 +1,28 @@
-node_modules
-# Keep environment variables out of version control
+# Dependency directories
+node_modules/
+
+# Environment variables file
 .env
+
+# Logs
+logs/
+*.log
+
+# Runtime data such as local database files
+db.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+
+# Compiled output
+dist/
+build/
+
+
+# Package lock file
+package-lock.json
