@@ -10,7 +10,7 @@ import expressSession from "express-session";
 // import morgan from "morgan";
 import passport from "passport";
 import prisma from "./config/prisma";
-import authRouter from "./routes/auth,routes";
+import authRouter from "./routes/auth.routes";
 import { morganMiddleware } from "./utils/logger";
 require("./config/passport");
 
