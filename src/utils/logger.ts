@@ -1,9 +1,9 @@
 import fs from "fs";
 import morgan from "morgan";
-import { createLogger, format } from "winston";
+import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-const logDirectory = "logs"; // Define the logs directory
+const logDirectory = "logs";
 
 // Create logs directory if it doesn't exist
 if (!fs.existsSync(logDirectory)) {
@@ -14,8 +14,11 @@ if (!fs.existsSync(logDirectory)) {
 const logFormat = format.printf(({ level, message, timestamp }) => {
 	return `${timestamp} ${level}: ${message}`;
 });
+const morganLogFormat = format.printf(({ level, message, timestamp }) => {
+	return `${timestamp} ${level}: ${message.status} ${message.method} ${message.url}`;
+});
 
-// Create a daily rotate file transport
+// Create a daily rotate file transport for general logging
 const dailyRotateTransport = new DailyRotateFile({
 	dirname: logDirectory,
 	filename: "application-%DATE%.log",
@@ -24,32 +27,38 @@ const dailyRotateTransport = new DailyRotateFile({
 	maxFiles: "30d",
 });
 
-// Create a logger
+// Create a daily rotate file transport for morgan logs
+const morganRotateTransport = new DailyRotateFile({
+	dirname: logDirectory,
+	filename: "morgan-%DATE%.log",
+	datePattern: "YYYY-MM-DD",
+	maxSize: "30k",
+	maxFiles: "30d",
+});
+
+// Create a logger for general logging
 const logger = createLogger({
-	level: "info", // Set the log level
+	level: "info",
 	format: format.combine(
 		format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
 		logFormat
 	),
-	transports: [dailyRotateTransport],
+	transports: [
+		dailyRotateTransport,
+		// new transports.Console(), // Add console transport for logging to console
+	],
 });
 
-// export default logger;
-
+// Create a logger for morgan logs
 const morganLogger = createLogger({
-	level: "info", // Set the log level for morgan logs
+	level: "info",
 	format: format.combine(
 		format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-		format.json() // You can adjust the format as needed
+		logFormat // Adjust the format as needed
 	),
 	transports: [
-		new DailyRotateFile({
-			dirname: logDirectory,
-			filename: "morgan-%DATE%.log",
-			datePattern: "YYYY-MM-DD",
-			maxSize: "30k",
-			maxFiles: "30d",
-		}),
+		morganRotateTransport,
+		new transports.Console(), // Add console transport for logging to console
 	],
 });
 
