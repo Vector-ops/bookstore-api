@@ -25,17 +25,23 @@ model User {
   email    String @unique
   password String
 
+  sub String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   BorrowBook BorrowBook[]
-  SellBook   SellBook[]
+  BoughtBook BuyBook[]
 }
 
 model Book {
-  id     String @id @default(cuid())
-  title  String
-  author String
+  id          String  @id @default(cuid())
+  title       String
+  author      String
+  description String
+  image       String?
+
+  count Int @default(1)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,10 +54,10 @@ model Book {
   sectionId String?
 
   BorrowBook BorrowBook[]
-  SellBook   SellBook?
+  SellBook   BuyBook?
 
-  BookPrice BookPrice @relation(fields: [bookId], references: [id])
-  bookId    String    @unique
+  BookPrice   BookPrice @relation(fields: [bookPriceId], references: [id])
+  bookPriceId String    @unique
 
   @@index([sectionId])
 }
@@ -77,7 +83,7 @@ model BookPrice {
   updatedAt DateTime @updatedAt
 }
 
-model SellBook {
+model BuyBook {
   id String @id @default(cuid())
 
   book    Book   @relation(fields: [bookId], references: [id])
