@@ -239,7 +239,6 @@ export const getSearchedBooks = async (
 				createHttpError.InternalServerError("Unable to get books")
 			);
 		}
-		console.log(books);
 		res.status(200).json(books);
 	} catch (error) {
 		logger.error(error);
@@ -247,5 +246,287 @@ export const getSearchedBooks = async (
 		return next(
 			createHttpError.InternalServerError("Unable to get suggestions")
 		);
+	}
+};
+
+/**
+ * @desc    Get bookmarked books
+ * @route   GET /api/books/bookmarks
+ * @access  Public
+ * @returns {object} { message: string }
+ */
+
+export const getBookmarks = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const userId = req.session.passport!.user;
+
+		const bookmarks = await prisma.book.findMany({
+			where: {
+				bookmarks: {
+					some: {
+						userId,
+					},
+				},
+			},
+			select: {
+				id: true,
+				title: true,
+				author: true,
+				description: true,
+				available: true,
+				buyable: true,
+				borrowed: true,
+				count: true,
+				section: {
+					select: {
+						type: true,
+					},
+				},
+				BookPrice: {
+					select: {
+						sellingPrice: true,
+					},
+				},
+			},
+		});
+
+		res.status(200).json(bookmarks);
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(
+			createHttpError.InternalServerError("Unable to get bookmarks")
+		);
+	}
+};
+
+/**
+ * @desc    Get searched bookmarked book
+ * @route   GET /api/books/bookmarks/:search
+ * @access  Public
+ * @returns {object} { message: string }
+ */
+
+export const getSearchedBookmarks = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const { search } = req.params;
+		const userId = req.session.passport!.user;
+
+		const searchedBook = await prisma.book.findMany({
+			where: {
+				AND: [
+					{
+						bookmarks: {
+							some: {
+								userId,
+							},
+						},
+					},
+					{
+						title: {
+							contains: search,
+							mode: "insensitive",
+						},
+					},
+				],
+			},
+			select: {
+				id: true,
+				title: true,
+				author: true,
+				description: true,
+				available: true,
+				buyable: true,
+				borrowed: true,
+				count: true,
+				section: {
+					select: {
+						type: true,
+					},
+				},
+				BookPrice: {
+					select: {
+						sellingPrice: true,
+					},
+				},
+			},
+		});
+
+		res.status(200).json(searchedBook);
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(
+			createHttpError.InternalServerError("Unable to get bookmarks")
+		);
+	}
+};
+
+/**
+ * @desc Add new bookmark or remove existing bookmark
+ * @route POST /api/books/bookmarks
+ * @access Private
+ * @returns {object} { message: string }
+ */
+
+export const addOrRemoveBookmark = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const userId = req.session.passport!.user;
+		const { bookId } = req.body;
+
+		const bookmark = await prisma.bookMark.findFirst({
+			where: {
+				AND: [
+					{
+						userId,
+					},
+					{
+						bookId,
+					},
+				],
+			},
+		});
+
+		if (bookmark) {
+			await prisma.bookMark.delete({
+				where: {
+					id: bookmark.id,
+				},
+			});
+		} else {
+			await prisma.bookMark.create({
+				data: {
+					userId,
+					bookId,
+				},
+			});
+		}
+
+		res.status(200).json({ message: "Succesfull" });
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(
+			createHttpError.InternalServerError("Unable to add bookmark")
+		);
+	}
+};
+
+/**
+ * @desc add to cart or remove from cart
+ * @route POST /api/books/cart
+ * @access Private
+ * @returns {object} { message: string }
+ */
+
+export const addOrRemoveCart = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const userId = req.session.passport!.user;
+		const { bookId } = req.body;
+
+		const cart = await prisma.cart.findFirst({
+			where: {
+				AND: [
+					{
+						userId,
+					},
+					{
+						bookId,
+					},
+				],
+			},
+		});
+
+		if (cart) {
+			await prisma.cart.delete({
+				where: {
+					id: cart.id,
+				},
+			});
+		} else {
+			await prisma.cart.create({
+				data: {
+					userId,
+					bookId,
+				},
+			});
+		}
+
+		res.status(200).json({ message: "Succesfull" });
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(
+			createHttpError.InternalServerError("Unable to add to cart")
+		);
+	}
+};
+
+/**
+ * @desc get cart
+ * @route GET /api/books/cart
+ * @access Private
+ * @returns {object} { message: string }
+ */
+
+export const getCart = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const userId = req.session.passport!.user;
+
+		const cart = await prisma.book.findMany({
+			where: {
+				Cart: {
+					some: {
+						userId,
+					},
+				},
+			},
+			select: {
+				id: true,
+				title: true,
+				author: true,
+				description: true,
+				available: true,
+				buyable: true,
+				borrowed: true,
+				count: true,
+				section: {
+					select: {
+						type: true,
+					},
+				},
+				BookPrice: {
+					select: {
+						sellingPrice: true,
+					},
+				},
+			},
+		});
+
+		res.status(200).json(cart);
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(createHttpError.InternalServerError("Unable to get cart"));
 	}
 };

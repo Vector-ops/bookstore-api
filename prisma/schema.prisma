@@ -32,6 +32,8 @@ model User {
 
   BorrowBook BorrowBook[]
   BoughtBook BuyBook[]
+  bookmarks  BookMark[]
+  cart       Cart[]
 }
 
 model Book {
@@ -58,6 +60,9 @@ model Book {
 
   BookPrice   BookPrice @relation(fields: [bookPriceId], references: [id])
   bookPriceId String    @unique
+
+  bookmarks BookMark[]
+  Cart      Cart[]
 
   @@index([sectionId])
 }
@@ -111,6 +116,36 @@ model BorrowBook {
 
   borrowedAt DateTime?
   returnedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bookId])
+}
+
+model BookMark {
+  id String @id @default(cuid())
+
+  book   Book   @relation(fields: [bookId], references: [id])
+  bookId String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bookId])
+}
+
+model Cart {
+  id String @id @default(cuid())
+
+  book   Book   @relation(fields: [bookId], references: [id])
+  bookId String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
