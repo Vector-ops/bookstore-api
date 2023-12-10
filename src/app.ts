@@ -25,10 +25,9 @@ const app = express();
 app.use(
 	cors({
 		origin: [
-			"http://localhost:5173/",
-			"http://localhost:3000",
-			"http://localhost:3000/api/auth/login",
-			"http://localhost:5173",
+			process.env.CLIENT_URL!,
+			// "http://localhost:3000",
+			// "http://localhost:3000/api/auth/login",
 		],
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE"],

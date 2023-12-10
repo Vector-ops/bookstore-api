@@ -2,9 +2,11 @@ import { Router } from "express";
 import {
 	addOrRemoveBookmark,
 	addOrRemoveCart,
+	buyBooks,
 	getBook,
 	getBookmarks,
 	getBooks,
+	getCarouselBooks,
 	getCart,
 	getSearchedBookmarks,
 	getSearchedBooks,
@@ -14,8 +16,9 @@ import { validateSession } from "../middleware/validateSession";
 
 export const booksRouter = Router();
 
-booksRouter.route("/").get(validateSession, getBooks);
+booksRouter.route("/").get(getBooks);
 booksRouter.route("/suggestions").get(getSuggestions);
+booksRouter.route("/carousel").get(getCarouselBooks);
 booksRouter
 	.route("/bookmarks")
 	.get(validateSession, getBookmarks)
@@ -28,4 +31,5 @@ booksRouter
 	.route("/cart")
 	.get(validateSession, getCart)
 	.post(validateSession, addOrRemoveCart);
+booksRouter.route("/buy").post(validateSession, buyBooks);
 booksRouter.route("/:id").get(getBook);

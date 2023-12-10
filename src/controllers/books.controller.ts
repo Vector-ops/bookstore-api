@@ -1,3 +1,4 @@
+import { count } from "console";
 import { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import prisma from "../config/prisma";
@@ -22,6 +23,9 @@ export const getBooks = async (
 				books: {
 					orderBy: {
 						title: "asc",
+					},
+					where: {
+						available: true,
 					},
 					select: {
 						id: true,
@@ -172,6 +176,43 @@ export const getSuggestions = async (
 		});
 
 		res.status(200).json(suggestions);
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(
+			createHttpError.InternalServerError("Unable to get suggestions")
+		);
+	}
+};
+
+/**
+ * @desc    Get carousel books
+ * @route   GET /api/books/carousel
+ * @access  Public
+ * @returns {object} { message: string }
+ */
+
+export const getCarouselBooks = async (
+	_req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const books = await prisma.book.findMany({
+			where: {
+				available: true,
+			},
+			select: {
+				id: true,
+				image: true,
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+			take: 12,
+		});
+
+		res.status(200).json(books);
 	} catch (error) {
 		logger.error(error);
 		console.error(error);
@@ -528,5 +569,67 @@ export const getCart = async (
 		logger.error(error);
 		console.error(error);
 		return next(createHttpError.InternalServerError("Unable to get cart"));
+	}
+};
+
+/**
+ * @desc buy books
+ * @route POST /api/books/buy
+ * @access Private
+ * @returns {object} { message: string }
+ */
+
+export const buyBooks = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	try {
+		const userId = req.session.passport!.user;
+
+		const cart = await prisma.cart.findMany({
+			where: {
+				userId,
+			},
+			select: {
+				book: {
+					select: {
+						id: true,
+						count: true,
+					},
+				},
+			},
+		});
+
+		if (cart.length === 0) {
+			return next(createHttpError.BadRequest("Cart is empty"));
+		}
+
+		await prisma.$transaction([
+			prisma.book.updateMany({
+				where: {
+					Cart: {
+						some: {
+							userId,
+						},
+					},
+				},
+				data: {
+					available: false,
+					buyable: false,
+				},
+			}),
+			prisma.cart.deleteMany({
+				where: {
+					userId,
+				},
+			}),
+		]);
+
+		res.status(200).json({ message: "Succesfull" });
+	} catch (error) {
+		logger.error(error);
+		console.error(error);
+		return next(createHttpError.InternalServerError("Unable to buy books"));
 	}
 };
