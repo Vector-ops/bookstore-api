@@ -24,17 +24,12 @@ const app = express();
 
 app.use(
 	cors({
-		origin: [
-			process.env.CLIENT_URL!,
-			// "http://localhost:3000",
-			// "http://localhost:3000/api/auth/login",
-		],
+		origin: [process.env.CLIENT_URL!],
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE"],
 	})
 );
 app.use(bodyParser.json());
-// app.use(morgan("dev"));
 app.use(morganMiddleware);
 
 const sessionStore = new PrismaSessionStore(prisma, {
