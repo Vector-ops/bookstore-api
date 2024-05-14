@@ -27,6 +27,17 @@ app.use(
 		origin: [process.env.CLIENT_URL!],
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE"],
+		allowedHeaders: [
+			"X-CSRF-Token",
+			"X-Requested-With",
+			"Accept",
+			"Accept-Version",
+			"Content-Length",
+			"Content-MD5",
+			"Content-Type",
+			"Date",
+			"X-Api-Version",
+		],
 	})
 );
 app.use(bodyParser.json());
